@@ -28,15 +28,19 @@ function aksu_scan_defend() {
         '.idea','.vscode','docker-compose.yml','dockerfile','proc/self/environ','proc/version','passwd','shadow','/etc/passwd','/etc/shadow',
         // 工具/后门/探针
         '/shell.php','/webshell.php','/cmd.php','/phpinfo.php','/info.php','/test.php','/setup.php',
-        // 后台登录与敏感目录
-        '/admin.php','/admin/','/login/','/administrator/','/webdav/',
+        // 后台登录与敏感目录（已去除/admin/，可正常使用/wp-admin/）
+        '/admin.php', /*'/admin/',*/ '/login/', '/administrator/', '/webdav/',
         // 路径穿越与变种
         '../','..\\','%2e%2e%2f','%2e%2e\\','%252e%252e%252f'
     ];
     foreach ($bad_paths as $path) {
         if (strpos($request_uri, $path) !== false) {
             if (function_exists('wpss_log')) wpss_log('scan', "敏感路径扫描拦截: $request_uri");
-            aksu_defense_die('Path forbidden', 403);
+            if (function_exists('aksu_defense_die_with_custom_html')) {
+                aksu_defense_die_with_custom_html(get_option('wpss_fw_scan_code', 403));
+            } else {
+                aksu_defense_die('Path forbidden', 403);
+            }
         }
     }
 }
@@ -61,14 +65,16 @@ if (!function_exists('aksu_sensitive_path_defend')) {
             '../','..\\','%2e%2e%2f','%2e%2e\\','%252e%252e%252f',
             'phpinfo.php','shell.php','cmd.php','test.php','setup.php',
             'phpmyadmin','pma','mysql','wp-admin/setup-config.php','wp-admin/install.php','wp-admin/upgrade.php',
-            'admin.php','admin/','login/','administrator/','webdav/',
+            'admin.php', /*'admin/',*/ 'login/','administrator/','webdav/',
             '.zip','.tar','.tar.gz','.rar','.swp','~','.tmp','.tar.bz2','.7z','.bak1','.bk','.tar.xz',
             '.idea','.vscode','docker-compose.yml','dockerfile','proc/self/environ','proc/version','passwd','shadow','/etc/passwd','/etc/shadow'
         ];
         foreach ($sensitive_paths as $path) {
             if (strpos($uri, $path) !== false) {
                 if (function_exists('wpss_log')) wpss_log('sensitive_path', "敏感路径拦截: $uri");
-                if (function_exists('aksu_defense_die')) {
+                if (function_exists('aksu_defense_die_with_custom_html')) {
+                    aksu_defense_die_with_custom_html(get_option('wpss_fw_scan_code', 403));
+                } else if (function_exists('aksu_defense_die')) {
                     aksu_defense_die('Forbidden Sensitive Path', 403);
                 } else {
                     exit('Forbidden Sensitive Path');

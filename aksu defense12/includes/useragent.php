@@ -11,27 +11,27 @@ function aksu_useragent_defend() {
 
     // 对所有中国爬虫/spider/bot等放行 Google、Bing
     if (
-    stripos($ua, 'spider') !== false ||
-    stripos($ua, 'bot') !== false ||
-    stripos($ua, 'crawler') !== false ||
-    stripos($ua, 'slurp') !== false ||
-    stripos($ua, 'archiver') !== false ||
-    stripos($ua, 'transcoder') !== false ||
-    stripos($ua, 'fetcher') !== false ||
-    stripos($ua, 'apex') !== false ||
-    stripos($ua, 'baiduspider') !== false ||
-    stripos($ua, 'sogou') !== false ||
-    stripos($ua, 'sosospider') !== false ||
-    stripos($ua, '360spider') !== false ||
-    stripos($ua, 'yisouspider') !== false ||
-    stripos($ua, 'bytespider') !== false ||
-    stripos($ua, 'bingbot') !== false ||
-    stripos($ua, 'bingpreview') !== false ||
-    stripos($ua, 'google') !== false ||
-    stripos($ua, 'toutiao') !== false ||
-) {
-    return; // 符合放行条件
-}
+        stripos($ua, 'spider') !== false ||
+        stripos($ua, 'bot') !== false ||
+        stripos($ua, 'crawler') !== false ||
+        stripos($ua, 'slurp') !== false ||
+        stripos($ua, 'archiver') !== false ||
+        stripos($ua, 'transcoder') !== false ||
+        stripos($ua, 'fetcher') !== false ||
+        stripos($ua, 'apex') !== false ||
+        stripos($ua, 'baiduspider') !== false ||
+        stripos($ua, 'sogou') !== false ||
+        stripos($ua, 'sosospider') !== false ||
+        stripos($ua, '360spider') !== false ||
+        stripos($ua, 'yisouspider') !== false ||
+        stripos($ua, 'bytespider') !== false ||
+        stripos($ua, 'bingbot') !== false ||
+        stripos($ua, 'bingpreview') !== false ||
+        stripos($ua, 'google') !== false ||
+        stripos($ua, 'toutiao') !== false
+    ) {
+        return; // 符合放行条件
+    }
 
     // 恶意User-Agent关键字大数据黑名单（不含爬虫相关关键字）
     $malicious_agents = [
@@ -77,21 +77,21 @@ function aksu_useragent_defend() {
             aksu_defense_die('Forbidden Malicious User-Agent', 403);
         }
     }
-      // 2. 自定义User-Agent黑名单（支持*通配符和普通关键词）【已增强】
-// 你可以直接在后台设置：*Safari*、*curl*、chrome、BadUA* 等，星号*可以匹配任意内容
-$custom = trim(get_option('wpss_ua_blacklist', ''));
-if ($custom) {
-    $rules = explode('|', $custom);
-    foreach ($rules as $rule) {
-        $pattern = trim($rule);
-        if ($pattern === '') continue;
-        // 智能支持 * 通配符，自动转正则匹配
-        $preg = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
-        if (preg_match($preg, $ua)) {
-            if (function_exists('wpss_log')) wpss_log('useragent_blacklist', "UA黑名单拦截: $ua");
-            aksu_defense_die('Forbidden by User-Agent Blacklist', 403);
+    // 2. 自定义User-Agent黑名单（支持*通配符和普通关键词）【已增强】
+    // 你可以直接在后台设置：*Safari*、*curl*、chrome、BadUA* 等，星号*可以匹配任意内容
+    $custom = trim(get_option('wpss_ua_blacklist', ''));
+    if ($custom) {
+        $rules = explode('|', $custom);
+        foreach ($rules as $rule) {
+            $pattern = trim($rule);
+            if ($pattern === '') continue;
+            // 智能支持 * 通配符，自动转正则匹配
+            $preg = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
+            if (preg_match($preg, $ua)) {
+                if (function_exists('wpss_log')) wpss_log('useragent_blacklist', "UA黑名单拦截: $ua");
+                aksu_defense_die('Forbidden by User-Agent Blacklist', 403);
+            }
         }
     }
- }
 }
 add_action('init', 'aksu_useragent_defend', 4);

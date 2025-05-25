@@ -9,6 +9,15 @@ if (!function_exists('aksu_cc_defend')) {
             if (is_user_logged_in() && current_user_can('manage_options')) return;
         }
 
+        // ---- 新增：后台页面豁免CC防护 ----
+        if (
+            (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-admin/') === 0)
+            || (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-login.php') !== false)
+        ) {
+            return;
+        }
+        // ---- 结束 ----
+
         if (!get_option('wpss_fw_cc_status', 1)) return;
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
@@ -36,21 +45,17 @@ if (!function_exists('aksu_cc_defend')) {
         foreach ($dangerous_ua_patterns as $pattern) {
             if (preg_match($pattern, $ua)) {
                 if (function_exists('wpss_log')) wpss_log('cc', "可疑UA特征CC拦截: $ip $ua");
-                aksu_defense_die('CC Blocked', 403);
+                aksu_defense_die_with_custom_html(get_option('wpss_fw_cc_code', 403));
             }
         }
         // 2. 检查URI特征
         foreach ($dangerous_uri_patterns as $pattern) {
             if (preg_match($pattern, $req_uri)) {
                 if (function_exists('wpss_log')) wpss_log('cc', "敏感URI特征CC拦截: $ip $req_uri");
-                aksu_defense_die('CC Blocked', 403);
+                aksu_defense_die_with_custom_html(get_option('wpss_fw_cc_code', 403));
             }
         }
-        // 3. 缺失Referer特征（可选，部分CC攻击无Referer）
-        if (empty($referer) && strpos($req_uri, '/wp-login.php') !== false) {
-            if (function_exists('wpss_log')) wpss_log('cc', "无Referer敏感页面访问: $ip $req_uri");
-            aksu_defense_die('CC Blocked', 403);
-        }
+        // 3. 缺失Referer特征（已移除原来的登录拦截，防止误伤后台）
 
         // 4. 速率限制（原有逻辑）
         $now = time();
@@ -61,7 +66,7 @@ if (!function_exists('aksu_cc_defend')) {
             // 已被封禁
             if (!empty($cc_data['blocked']) && $now < $cc_data['blocked']) {
                 if (function_exists('wpss_log')) wpss_log('cc', "CC攻击防护，已封锁: $ip");
-                aksu_defense_die('CC Blocked', 403);
+                aksu_defense_die_with_custom_html(get_option('wpss_fw_cc_code', 403));
             }
             // 超出统计周期，重置计数
             if ($now - $cc_data['start'] > $period) {
@@ -72,7 +77,7 @@ if (!function_exists('aksu_cc_defend')) {
                     $cc_data['blocked'] = $now + $blocktime;
                     set_transient($key, $cc_data, $blocktime);
                     if (function_exists('wpss_log')) wpss_log('cc', "CC攻击检测，自动封锁: $ip");
-                    aksu_defense_die('CC Blocked', 403);
+                    aksu_defense_die_with_custom_html(get_option('wpss_fw_cc_code', 403));
                 }
             }
         }

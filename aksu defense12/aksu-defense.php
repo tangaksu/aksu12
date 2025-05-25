@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: aksu defense10
+Plugin Name: aksu defense13
 Description: 轻量级 WordPress 网站安全防火墙，集 CC、防注入、扫描拦截、黑白名单、日志等于一体。
 Version: 1.1
 Author: aksu
